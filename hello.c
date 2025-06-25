@@ -15,6 +15,8 @@
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
+static int mouse_x = 0;
+static int mouse_y = 0;
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
@@ -30,10 +32,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
-    if (event->type == SDL_EVENT_KEY_DOWN) {
+    switch (event->type) {
+    case SDL_EVENT_KEY_DOWN:
         if (event->key.key == SDLK_ESCAPE) {
-            return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
+            return SDL_APP_SUCCESS; /* end the program, reporting success to the OS. */
         }
+        break;
+    case SDL_EVENT_MOUSE_MOTION:
+        mouse_x = event->motion.x;
+        mouse_y = event->motion.y;
+        break;
     }
     return SDL_APP_CONTINUE;
 }
@@ -86,7 +94,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     /* Draw a red circle in the center of the screen */
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    draw_circle(renderer, w / 2, h / 2, h / 4);
+    draw_circle(renderer, mouse_x, mouse_y, 50);
     SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE;
