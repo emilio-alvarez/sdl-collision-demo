@@ -38,10 +38,22 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
             return SDL_APP_SUCCESS; /* end the program, reporting success to the OS. */
         }
         break;
-    case SDL_EVENT_MOUSE_MOTION:
-        mouse_x = event->motion.x;
-        mouse_y = event->motion.y;
+    case SDL_EVENT_MOUSE_MOTION: {
+        /* Constrain mouse position to keep circle within yellow square bounds */
+        int new_x = event->motion.x;
+        int new_y = event->motion.y;
+        int radius = 50;  /* Circle radius */
+        
+        /* Yellow square bounds: x=50 to 350, y=50 to 250 */
+        if (new_x - radius < 50) new_x = 50 + radius;
+        if (new_x + radius > 350) new_x = 350 - radius;
+        if (new_y - radius < 50) new_y = 50 + radius;
+        if (new_y + radius > 250) new_y = 250 - radius;
+        
+        mouse_x = new_x;
+        mouse_y = new_y;
         break;
+    }
     }
     return SDL_APP_CONTINUE;
 }
@@ -67,6 +79,11 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     /* Draw the background */
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
+    
+    /* Draw a yellow square as background */
+    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);  /* Yellow color */
+    SDL_FRect background_square = {50, 50, 300, 200};  /* x=50, y=50, width=300, height=200 */
+    SDL_RenderFillRect(renderer, &background_square);
 
     /* Draw a red circle in the center of the screen */
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
