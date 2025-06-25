@@ -20,11 +20,6 @@ static int mouse_y = 0;
 static int game_over = 0;  /* Flag to track if game is over */
 static int w = 0, h = 0;
 
-static int square_x = 200;
-static int square_y = 200;
-static int square_w = 300;
-static int square_h = 200;
-
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -65,18 +60,16 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
     return SDL_APP_CONTINUE;
 }
 
-static void check_collision() {
-  int radius = 25;  /* Circle radius */
+static void check_collision(SDL_FRect player_square, SDL_FRect obstacle_square) {
+  int left_edge = player_square.x;
+  int right_edge = player_square.x + player_square.w;
+  int top_edge = player_square.y;
+  int bottom_edge = player_square.y + player_square.h;
 
-  int left_edge = mouse_x - radius;
-  int right_edge = mouse_x + radius;
-  int top_edge = mouse_y - radius;
-  int bottom_edge = mouse_y + radius;
-
-  int square_left_edge = square_x;
-  int square_right_edge = square_x + square_w;
-  int square_top_edge = square_y;
-  int square_bottom_edge = square_y + square_h;
+  int square_left_edge = obstacle_square.x;
+  int square_right_edge = obstacle_square.x + obstacle_square.w;
+  int square_top_edge = obstacle_square.y;
+  int square_bottom_edge = obstacle_square.y + obstacle_square.h;
 
   if (bottom_edge <= square_top_edge) {
     return;
@@ -95,12 +88,6 @@ static void check_collision() {
   }
 
   game_over = 1;
-
-  /* Yellow square bounds: x=50 to 350, y=50 to 250 */
-  // if (mouse_x - radius < 50) mouse_x = 50 + radius;
-  // if (mouse_x + radius > 350) mouse_x = 350 - radius;
-  // if (mouse_y - radius < 50) mouse_y = 50 + radius;
-  // if (mouse_y + radius > 250) mouse_y = 250 - radius;
 }
 
 
@@ -122,16 +109,26 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    /* Draw a yellow square as background */
+    /* Draw the path */
     SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);  /* Yellow color */
-    SDL_FRect background_square = {square_x, square_y, square_w, square_h};  /* x=50, y=50, width=300, height=200 */
-    SDL_RenderFillRect(renderer, &background_square);
+
+    SDL_FRect path_squares[] = {
+      {0, 0, 500, 200},
+      {500, 0, 200, 500},
+      {0, 700, 500, 200},
+    };
+    for (int i = 0; i < sizeof(path_squares) / sizeof(path_squares[0]); i++) {
+      SDL_RenderFillRect(renderer, &path_squares[i]);
+    }
 
     /* Draw a red circle in the center of the screen */
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    check_collision();
     SDL_FRect player_square = {mouse_x - 25 , mouse_y - 25, 50, 50};
     SDL_RenderFillRect(renderer, &player_square);
+
+    for (int i = 0; i < sizeof(path_squares) / sizeof(path_squares[0]); i++) {
+      check_collision(player_square, path_squares[i]);
+    }
 
     /* Draw game over text if game is over */
     if (game_over) {
