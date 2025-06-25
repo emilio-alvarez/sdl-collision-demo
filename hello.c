@@ -38,25 +38,55 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
     return SDL_APP_CONTINUE;
 }
 
+static void draw_circle(SDL_Renderer *renderer, int center_x, int center_y, int radius)
+{
+    const int32_t diameter = (radius * 2);
+
+    int32_t x = (radius - 1);
+    int32_t y = 0;
+    int32_t tx = 1;
+    int32_t ty = 1;
+    int32_t error = (tx - diameter);
+
+    while (x >= y) {
+        // Each of the following renders an octant of the circle
+        SDL_RenderPoint(renderer, (float)center_x + x, (float)center_y - y);
+        SDL_RenderPoint(renderer, (float)center_x + x, (float)center_y + y);
+        SDL_RenderPoint(renderer, (float)center_x - x, (float)center_y - y);
+        SDL_RenderPoint(renderer, (float)center_x - x, (float)center_y + y);
+        SDL_RenderPoint(renderer, (float)center_x + y, (float)center_y - x);
+        SDL_RenderPoint(renderer, (float)center_x + y, (float)center_y + x);
+        SDL_RenderPoint(renderer, (float)center_x - y, (float)center_y - x);
+        SDL_RenderPoint(renderer, (float)center_x - y, (float)center_y + x);
+
+        if (error <= 0) {
+            ++y;
+            error += ty;
+            ty += 2;
+        }
+
+        if (error > 0) {
+            --x;
+            tx += 2;
+            error += (tx - diameter);
+        }
+    }
+}
+
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-    const char *message = "Hello World!";
     int w = 0, h = 0;
-    float x, y;
-    const float scale = 4.0f;
 
-    /* Center the message and scale it up */
     SDL_GetRenderOutputSize(renderer, &w, &h);
-    SDL_SetRenderScale(renderer, scale, scale);
-    x = ((w / scale) - SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * SDL_strlen(message)) / 2;
-    y = ((h / scale) - SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE) / 2;
 
-    /* Draw the message */
+    /* Draw the background */
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderDebugText(renderer, x, y, message);
+
+    /* Draw a red circle in the center of the screen */
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    draw_circle(renderer, w / 2, h / 2, h / 4);
     SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE;
