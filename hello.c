@@ -15,9 +15,15 @@
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
-static int mouse_x = 50 + 50 + 100;
-static int mouse_y = 50 + 50 + 46;
+static int mouse_x = 0;
+static int mouse_y = 0;
 static int game_over = 0;  /* Flag to track if game is over */
+static int w = 0, h = 0;
+
+static int square_x = 200;
+static int square_y = 200;
+static int square_w = 300;
+static int square_h = 200;
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
@@ -28,9 +34,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
+    SDL_GetRenderOutputSize(renderer, &w, &h);
+
     /* Set initial mouse position inside yellow square but away from edges */
     /* Yellow square: x=50 to 350 (width=300), y=50 to 250 (height=200) */
     /* Circle radius: 50, so need at least 50 pixels from each edge */
+    mouse_x = w / 2;
+    mouse_y = h / 2;
     SDL_WarpMouseInWindow(window, mouse_x, mouse_y);
 
     return SDL_APP_CONTINUE;
@@ -58,17 +68,24 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 static void check_collision() {
   int radius = 50;  /* Circle radius */
 
+  int left_edge = mouse_x - radius;
+  int right_edge = mouse_x + radius;
+  int top_edge = mouse_y - radius;
+  int bottom_edge = mouse_y + radius;
+
   /* Check if circle would touch the boundary */
-  if (mouse_x - radius <= 50 || mouse_x + radius >= 350 ||
-      mouse_y - radius <= 50 || mouse_y + radius >= 250) {
+  if (((left_edge >= square_x && left_edge <= square_x + square_w) &&
+      (top_edge >= square_y && top_edge <= square_y + square_h)) ||
+      ((right_edge >= square_x && right_edge <= square_x + square_w) &&
+      (bottom_edge >= square_y && bottom_edge <= square_y + square_h))) {
     game_over = 1;
   }
 
   /* Yellow square bounds: x=50 to 350, y=50 to 250 */
-  if (mouse_x - radius < 50) mouse_x = 50 + radius;
-  if (mouse_x + radius > 350) mouse_x = 350 - radius;
-  if (mouse_y - radius < 50) mouse_y = 50 + radius;
-  if (mouse_y + radius > 250) mouse_y = 250 - radius;
+  // if (mouse_x - radius < 50) mouse_x = 50 + radius;
+  // if (mouse_x + radius > 350) mouse_x = 350 - radius;
+  // if (mouse_y - radius < 50) mouse_y = 50 + radius;
+  // if (mouse_y + radius > 250) mouse_y = 250 - radius;
 }
 
 
@@ -86,17 +103,13 @@ static void draw_circle(SDL_Renderer *renderer, int center_x, int center_y, int 
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-    int w = 0, h = 0;
-
-    SDL_GetRenderOutputSize(renderer, &w, &h);
-
     /* Draw the background */
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
     /* Draw a yellow square as background */
     SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);  /* Yellow color */
-    SDL_FRect background_square = {50, 50, 300, 200};  /* x=50, y=50, width=300, height=200 */
+    SDL_FRect background_square = {square_x, square_y, square_w, square_h};  /* x=50, y=50, width=300, height=200 */
     SDL_RenderFillRect(renderer, &background_square);
 
     /* Draw a red circle in the center of the screen */
