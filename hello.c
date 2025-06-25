@@ -66,7 +66,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 }
 
 static void check_collision() {
-  int radius = 50;  /* Circle radius */
+  int radius = 25;  /* Circle radius */
 
   int left_edge = mouse_x - radius;
   int right_edge = mouse_x + radius;
@@ -115,7 +115,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     /* Draw a red circle in the center of the screen */
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     check_collision();
-    draw_circle(renderer, mouse_x, mouse_y, 50);
+    SDL_FRect player_square = {mouse_x - 25 , mouse_y - 25, 50, 50};
+    SDL_RenderFillRect(renderer, &player_square);
 
     /* Draw game over text if game is over */
     if (game_over) {
