@@ -48,35 +48,11 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
 static void draw_circle(SDL_Renderer *renderer, int center_x, int center_y, int radius)
 {
-    const int32_t diameter = (radius * 2);
-
-    int32_t x = (radius - 1);
-    int32_t y = 0;
-    int32_t tx = 1;
-    int32_t ty = 1;
-    int32_t error = (tx - diameter);
-
-    while (x >= y) {
-        // Each of the following renders an octant of the circle
-        SDL_RenderPoint(renderer, (float)center_x + x, (float)center_y - y);
-        SDL_RenderPoint(renderer, (float)center_x + x, (float)center_y + y);
-        SDL_RenderPoint(renderer, (float)center_x - x, (float)center_y - y);
-        SDL_RenderPoint(renderer, (float)center_x - x, (float)center_y + y);
-        SDL_RenderPoint(renderer, (float)center_x + y, (float)center_y - x);
-        SDL_RenderPoint(renderer, (float)center_x + y, (float)center_y + x);
-        SDL_RenderPoint(renderer, (float)center_x - y, (float)center_y - x);
-        SDL_RenderPoint(renderer, (float)center_x - y, (float)center_y + x);
-
-        if (error <= 0) {
-            ++y;
-            error += ty;
-            ty += 2;
-        }
-
-        if (error > 0) {
-            --x;
-            tx += 2;
-            error += (tx - diameter);
+    for (int y = -radius; y <= radius; y++) {
+        for (int x = -radius; x <= radius; x++) {
+            if (x * x + y * y <= radius * radius) {
+                SDL_RenderPoint(renderer, center_x + x, center_y + y);
+            }
         }
     }
 }
