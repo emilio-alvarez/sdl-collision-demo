@@ -73,13 +73,28 @@ static void check_collision() {
   int top_edge = mouse_y - radius;
   int bottom_edge = mouse_y + radius;
 
-  /* Check if circle would touch the boundary */
-  if (((left_edge >= square_x && left_edge <= square_x + square_w) &&
-      (top_edge >= square_y && top_edge <= square_y + square_h)) ||
-      ((right_edge >= square_x && right_edge <= square_x + square_w) &&
-      (bottom_edge >= square_y && bottom_edge <= square_y + square_h))) {
-    game_over = 1;
+  int square_left_edge = square_x;
+  int square_right_edge = square_x + square_w;
+  int square_top_edge = square_y;
+  int square_bottom_edge = square_y + square_h;
+
+  if (bottom_edge <= square_top_edge) {
+    return;
   }
+
+  if (top_edge >= square_bottom_edge) {
+    return;
+  }
+
+  if (left_edge >= square_right_edge) {
+    return;
+  }
+
+  if (right_edge <= square_left_edge) {
+    return;
+  }
+
+  game_over = 1;
 
   /* Yellow square bounds: x=50 to 350, y=50 to 250 */
   // if (mouse_x - radius < 50) mouse_x = 50 + radius;
