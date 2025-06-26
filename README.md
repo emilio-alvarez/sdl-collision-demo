@@ -14,4 +14,4 @@ cmake --build build
 
 ## Demo
 
-![](demo.mov)
+<video src='demo.mov' width=180/>
