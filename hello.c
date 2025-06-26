@@ -20,7 +20,7 @@ const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 800;
 const int MAX_PARTICLES = 100;
 const int MAX_COLLECTIBLES = 10;
-const int MAX_LEVELS = 3;
+const int MAX_LEVELS = 6;
 
 // Physics constants
 const float GRAVITY = 0.2f;
@@ -92,7 +92,7 @@ static int num_moving_platforms = 0;
 
 // Level data
 typedef struct {
-    SDL_FRect platforms[15];
+    SDL_FRect platforms[20];
     int num_platforms;
     SDL_FRect lava_squares[5];
     int num_lava;
@@ -636,6 +636,135 @@ void init_levels(void)
     levels[2].level_moving_platforms[0] = (MovingPlatform){{300, h-350, 80, 20}, 1, 0, 300, 500, 0, 0, 1};
     levels[2].level_moving_platforms[1] = (MovingPlatform){{600, h-400, 80, 20}, 0, -1, 0, 0, h-500, h-300, 1};
     levels[2].level_moving_platforms[2] = (MovingPlatform){{850, h-150, 100, 20}, 1, 0, 850, 1000, 0, 0, 1};
+
+    // Level 3 - Vertical Challenge
+    levels[3].num_platforms = 12;
+    levels[3].platforms[0] = (SDL_FRect){0, h-50, 100, 50}; // Small starting platform
+    levels[3].platforms[1] = (SDL_FRect){200, h-150, 80, 20};
+    levels[3].platforms[2] = (SDL_FRect){350, h-250, 80, 20};
+    levels[3].platforms[3] = (SDL_FRect){150, h-350, 80, 20};
+    levels[3].platforms[4] = (SDL_FRect){400, h-450, 80, 20};
+    levels[3].platforms[5] = (SDL_FRect){250, h-550, 80, 20};
+    levels[3].platforms[6] = (SDL_FRect){500, h-650, 80, 20};
+    levels[3].platforms[7] = (SDL_FRect){700, h-600, 100, 20};
+    levels[3].platforms[8] = (SDL_FRect){900, h-500, 80, 20};
+    levels[3].platforms[9] = (SDL_FRect){1050, h-400, 80, 20};
+    levels[3].platforms[10] = (SDL_FRect){850, h-300, 100, 20};
+    levels[3].platforms[11] = (SDL_FRect){w-150, h-200, 150, 50};
+
+    levels[3].num_lava = 5;
+    levels[3].lava_squares[0] = (SDL_FRect){100, h-50, 100, 50};
+    levels[3].lava_squares[1] = (SDL_FRect){300, h-50, 200, 50};
+    levels[3].lava_squares[2] = (SDL_FRect){600, h-50, 300, 50};
+    levels[3].lava_squares[3] = (SDL_FRect){450, h-350, 50, 100};
+    levels[3].lava_squares[4] = (SDL_FRect){750, h-450, 50, 150};
+
+    levels[3].start_pos = (SDL_FRect){25, h-150, 40, 40};
+    levels[3].goal = (SDL_FRect){w-100, h-300, 50, 50};
+
+    levels[3].num_collectibles = 6;
+    levels[3].level_collectibles[0] = (Collectible){{225, h-200, 20, 20}, 0, 0};
+    levels[3].level_collectibles[1] = (Collectible){{375, h-300, 20, 20}, 0, 0};
+    levels[3].level_collectibles[2] = (Collectible){{275, h-600, 20, 20}, 0, 0};
+    levels[3].level_collectibles[3] = (Collectible){{525, h-700, 20, 20}, 0, 0};
+    levels[3].level_collectibles[4] = (Collectible){{925, h-550, 20, 20}, 0, 0};
+    levels[3].level_collectibles[5] = (Collectible){{875, h-350, 20, 20}, 0, 0};
+
+    levels[3].num_moving = 2;
+    levels[3].level_moving_platforms[0] = (MovingPlatform){{600, h-350, 80, 20}, 0, -2, 0, 0, h-550, h-250, 1};
+    levels[3].level_moving_platforms[1] = (MovingPlatform){{800, h-400, 80, 20}, 1, 0, 800, 950, 0, 0, 1};
+
+    // Level 4 - Speed Run
+    levels[4].num_platforms = 15;
+    levels[4].platforms[0] = (SDL_FRect){0, h-50, 150, 50};
+    levels[4].platforms[1] = (SDL_FRect){250, h-120, 60, 20};
+    levels[4].platforms[2] = (SDL_FRect){400, h-180, 60, 20};
+    levels[4].platforms[3] = (SDL_FRect){550, h-120, 60, 20};
+    levels[4].platforms[4] = (SDL_FRect){700, h-200, 60, 20};
+    levels[4].platforms[5] = (SDL_FRect){850, h-150, 60, 20};
+    levels[4].platforms[6] = (SDL_FRect){1000, h-250, 60, 20};
+    levels[4].platforms[7] = (SDL_FRect){900, h-350, 80, 20};
+    levels[4].platforms[8] = (SDL_FRect){700, h-450, 80, 20};
+    levels[4].platforms[9] = (SDL_FRect){500, h-350, 80, 20};
+    levels[4].platforms[10] = (SDL_FRect){300, h-450, 80, 20};
+    levels[4].platforms[11] = (SDL_FRect){100, h-350, 80, 20};
+    levels[4].platforms[12] = (SDL_FRect){200, h-550, 100, 20};
+    levels[4].platforms[13] = (SDL_FRect){400, h-650, 100, 20};
+    levels[4].platforms[14] = (SDL_FRect){w-200, h-100, 200, 50};
+
+    levels[4].num_lava = 4;
+    levels[4].lava_squares[0] = (SDL_FRect){150, h-50, 100, 50};
+    levels[4].lava_squares[1] = (SDL_FRect){310, h-50, 240, 50};
+    levels[4].lava_squares[2] = (SDL_FRect){610, h-50, 240, 50};
+    levels[4].lava_squares[3] = (SDL_FRect){380, h-350, 120, 100};
+
+    levels[4].start_pos = (SDL_FRect){50, h-150, 40, 40};
+    levels[4].goal = (SDL_FRect){w-150, h-200, 50, 50};
+
+    levels[4].num_collectibles = 7;
+    levels[4].level_collectibles[0] = (Collectible){{275, h-170, 20, 20}, 0, 0};
+    levels[4].level_collectibles[1] = (Collectible){{575, h-170, 20, 20}, 0, 0};
+    levels[4].level_collectibles[2] = (Collectible){{875, h-200, 20, 20}, 0, 0};
+    levels[4].level_collectibles[3] = (Collectible){{925, h-400, 20, 20}, 0, 0};
+    levels[4].level_collectibles[4] = (Collectible){{325, h-500, 20, 20}, 0, 0};
+    levels[4].level_collectibles[5] = (Collectible){{225, h-600, 20, 20}, 0, 0};
+    levels[4].level_collectibles[6] = (Collectible){{425, h-700, 20, 20}, 0, 0};
+
+    levels[4].num_moving = 4;
+    levels[4].level_moving_platforms[0] = (MovingPlatform){{600, h-300, 60, 20}, 1, 0, 600, 750, 0, 0, 1};
+    levels[4].level_moving_platforms[1] = (MovingPlatform){{150, h-250, 60, 20}, 0, -2, 0, 0, h-400, h-200, 1};
+    levels[4].level_moving_platforms[2] = (MovingPlatform){{750, h-350, 60, 20}, 1, 0, 750, 900, 0, 0, 1};
+    levels[4].level_moving_platforms[3] = (MovingPlatform){{300, h-200, 60, 20}, 2, 0, 300, 500, 0, 0, 1};
+
+    // Level 5 - The Gauntlet (Final Challenge)
+    levels[5].num_platforms = 20;
+    levels[5].platforms[0] = (SDL_FRect){0, h-50, 120, 50};
+    levels[5].platforms[1] = (SDL_FRect){180, h-150, 60, 20};
+    levels[5].platforms[2] = (SDL_FRect){300, h-200, 40, 20};
+    levels[5].platforms[3] = (SDL_FRect){400, h-150, 40, 20};
+    levels[5].platforms[4] = (SDL_FRect){500, h-250, 60, 20};
+    levels[5].platforms[5] = (SDL_FRect){620, h-180, 40, 20};
+    levels[5].platforms[6] = (SDL_FRect){720, h-300, 60, 20};
+    levels[5].platforms[7] = (SDL_FRect){840, h-220, 40, 20};
+    levels[5].platforms[8] = (SDL_FRect){940, h-350, 60, 20};
+    levels[5].platforms[9] = (SDL_FRect){1050, h-280, 40, 20};
+    levels[5].platforms[10] = (SDL_FRect){950, h-450, 80, 20};
+    levels[5].platforms[11] = (SDL_FRect){800, h-550, 60, 20};
+    levels[5].platforms[12] = (SDL_FRect){650, h-450, 60, 20};
+    levels[5].platforms[13] = (SDL_FRect){500, h-550, 60, 20};
+    levels[5].platforms[14] = (SDL_FRect){350, h-450, 60, 20};
+    levels[5].platforms[15] = (SDL_FRect){200, h-550, 60, 20};
+    levels[5].platforms[16] = (SDL_FRect){100, h-650, 80, 20};
+    levels[5].platforms[17] = (SDL_FRect){300, h-700, 100, 20};
+    levels[5].platforms[18] = (SDL_FRect){500, h-750, 80, 20};
+    levels[5].platforms[19] = (SDL_FRect){w-150, h-150, 150, 50};
+
+    levels[5].num_lava = 5;
+    levels[5].lava_squares[0] = (SDL_FRect){120, h-50, 60, 50};
+    levels[5].lava_squares[1] = (SDL_FRect){240, h-50, 160, 50};
+    levels[5].lava_squares[2] = (SDL_FRect){440, h-50, 180, 50};
+    levels[5].lava_squares[3] = (SDL_FRect){660, h-50, 280, 50};
+    levels[5].lava_squares[4] = (SDL_FRect){780, h-400, 60, 150};
+
+    levels[5].start_pos = (SDL_FRect){25, h-150, 40, 40};
+    levels[5].goal = (SDL_FRect){w-100, h-250, 50, 50};
+
+    levels[5].num_collectibles = 8;
+    levels[5].level_collectibles[0] = (Collectible){{205, h-200, 20, 20}, 0, 0};
+    levels[5].level_collectibles[1] = (Collectible){{525, h-300, 20, 20}, 0, 0};
+    levels[5].level_collectibles[2] = (Collectible){{745, h-350, 20, 20}, 0, 0};
+    levels[5].level_collectibles[3] = (Collectible){{975, h-500, 20, 20}, 0, 0};
+    levels[5].level_collectibles[4] = (Collectible){{675, h-500, 20, 20}, 0, 0};
+    levels[5].level_collectibles[5] = (Collectible){{225, h-600, 20, 20}, 0, 0};
+    levels[5].level_collectibles[6] = (Collectible){{325, h-750, 20, 20}, 0, 0};
+    levels[5].level_collectibles[7] = (Collectible){{525, h-800, 20, 20}, 0, 0};
+
+    levels[5].num_moving = 5;
+    levels[5].level_moving_platforms[0] = (MovingPlatform){{250, h-300, 50, 20}, 1, 0, 250, 350, 0, 0, 1};
+    levels[5].level_moving_platforms[1] = (MovingPlatform){{450, h-350, 50, 20}, 0, -1, 0, 0, h-500, h-300, 1};
+    levels[5].level_moving_platforms[2] = (MovingPlatform){{600, h-350, 50, 20}, 1, 0, 600, 700, 0, 0, 1};
+    levels[5].level_moving_platforms[3] = (MovingPlatform){{400, h-600, 60, 20}, 2, 0, 400, 550, 0, 0, 1};
+    levels[5].level_moving_platforms[4] = (MovingPlatform){{200, h-400, 50, 20}, 0, -2, 0, 0, h-600, h-350, 1};
 }
 
 void load_level(int level_num)
