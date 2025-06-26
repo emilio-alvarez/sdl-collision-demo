@@ -62,6 +62,8 @@ static float player_rotation = 0.0f;
 static int has_double_jump = 0;
 static int double_jump_used = 0;
 static float invincibility_timer = 0;
+static float walk_animation_timer = 0.0f;
+static int is_walking = 0;
 
 // Particle system
 typedef struct {
@@ -126,6 +128,7 @@ void render_moving_platforms(void);
 int is_colliding(SDL_FRect a, SDL_FRect b);
 void render_hud(void);
 void render_background(void);
+void render_player(void);
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
@@ -217,6 +220,20 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         // Handle input
         const Uint8 *keystate = SDL_GetKeyboardState(NULL);
         float old_x = player.x;
+
+        // Check if player is walking
+        is_walking = (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_A] ||
+                     keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) && is_on_ground;
+
+        // Update walking animation timer
+        if (is_walking) {
+            walk_animation_timer += 0.3f; // Animation speed
+            if (walk_animation_timer >= 6.28f) { // Full cycle (2 * PI)
+                walk_animation_timer -= 6.28f;
+            }
+        } else {
+            walk_animation_timer = 0.0f; // Reset when not walking
+        }
 
         // Horizontal movement
         if (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_A]) {
@@ -451,38 +468,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     }
 
     // Draw player
-    if (invincibility_timer > 0 && ((int)invincibility_timer / 5) % 2) {
-        // Flashing effect during invincibility
-    } else {
-        SDL_SetRenderDrawColor(renderer, 255, 50, 50, 255);
-
-        if (game_over && player_rotation != 0.0f) {
-            // Rotated square for death animation
-            float center_x = player.x + player.w / 2.0f;
-            float center_y = player.y + player.h / 2.0f;
-            float half_size = player.w / 2.0f;
-
-            float angle_rad = player_rotation * (3.14159f / 180.0f);
-            float cos_a = SDL_cosf(angle_rad);
-            float sin_a = SDL_sinf(angle_rad);
-
-            SDL_Vertex vertices[4];
-            float corners[4][2] = {{-half_size, -half_size}, {half_size, -half_size},
-                                 {half_size, half_size}, {-half_size, half_size}};
-
-                         for (int i = 0; i < 4; i++) {
-                 vertices[i].position.x = center_x + (corners[i][0] * cos_a - corners[i][1] * sin_a);
-                 vertices[i].position.y = center_y + (corners[i][0] * sin_a + corners[i][1] * cos_a);
-                 vertices[i].color = (SDL_FColor){1.0f, 0.2f, 0.2f, 1.0f};
-             }
-
-            int indices[6] = {0, 1, 2, 0, 2, 3};
-            SDL_RenderGeometry(renderer, NULL, vertices, 4, indices, 6);
-                 } else {
-             // Normal square
-             SDL_RenderFillRect(renderer, &player);
-         }
-    }
+    render_player();
 
     render_particles();
     render_hud();
@@ -813,8 +799,8 @@ void reset_player(void)
     Level *level = &levels[current_level];
     player.x = level->start_pos.x;
     player.y = level->start_pos.y;
-    player.w = 40;
-    player.h = 40;
+    player.w = 24; // Adjusted to match stick figure width
+    player.h = 40; // Keep same height
     player_vy = 0;
          player_rotation = 0;
     is_on_ground = 0;
@@ -1050,6 +1036,104 @@ void render_background(void)
         Uint8 b = (Uint8)(60 + ratio * 120);
         SDL_SetRenderDrawColor(renderer, r, g, b, 255);
         SDL_RenderLine(renderer, 0, y, w, y);
+    }
+}
+
+void render_player(void)
+{
+    // Skip rendering if flashing during invincibility
+    if (invincibility_timer > 0 && ((int)invincibility_timer / 5) % 2) {
+        return;
+    }
+
+    float center_x = player.x + player.w / 2.0f;
+    float center_y = player.y + player.h / 2.0f;
+
+    // Player color
+    SDL_SetRenderDrawColor(renderer, 255, 50, 50, 255);
+
+    if (game_over) {
+        // Spinning death animation - render as rotated stick figure
+        float angle_rad = player_rotation * (3.14159f / 180.0f);
+        float cos_a = SDL_cosf(angle_rad);
+        float sin_a = SDL_sinf(angle_rad);
+
+        // Define fat stick figure points relative to center
+        float head_x = 0, head_y = -16;
+        float body_left_x = -8, body_left_y = -2;
+        float body_right_x = 8, body_right_y = -2;
+        float left_arm_x = -12, left_arm_y = 2;
+        float right_arm_x = 12, right_arm_y = 2;
+        float left_leg_x = -6, left_leg_y = 17;
+        float right_leg_x = 6, right_leg_y = 17;
+
+        // Rotate all points
+        float rotated_points[7][2];
+        float original_points[7][2] = {
+            {head_x, head_y}, {body_left_x, body_left_y}, {body_right_x, body_right_y},
+            {left_arm_x, left_arm_y}, {right_arm_x, right_arm_y},
+            {left_leg_x, left_leg_y}, {right_leg_x, right_leg_y}
+        };
+
+        for (int i = 0; i < 7; i++) {
+            rotated_points[i][0] = center_x + (original_points[i][0] * cos_a - original_points[i][1] * sin_a);
+            rotated_points[i][1] = center_y + (original_points[i][0] * sin_a + original_points[i][1] * cos_a);
+        }
+
+        // Draw rotated fat stick figure
+        // Bigger head (circle approximated with filled rect)
+        SDL_FRect head = {rotated_points[0][0] - 5, rotated_points[0][1] - 4, 10, 8};
+        SDL_RenderFillRect(renderer, &head);
+
+        // Fat body (draw as thick line or multiple lines for width)
+        for (int offset = -3; offset <= 3; offset++) {
+            SDL_RenderLine(renderer, rotated_points[1][0] + offset, rotated_points[1][1],
+                          rotated_points[2][0] + offset, rotated_points[2][1]);
+        }
+
+        // Arms
+        SDL_RenderLine(renderer, rotated_points[1][0], rotated_points[1][1],
+                      rotated_points[3][0], rotated_points[3][1]);
+        SDL_RenderLine(renderer, rotated_points[2][0], rotated_points[2][1],
+                      rotated_points[4][0], rotated_points[4][1]);
+
+        // Legs
+        SDL_RenderLine(renderer, rotated_points[1][0], rotated_points[1][1],
+                      rotated_points[5][0], rotated_points[5][1]);
+        SDL_RenderLine(renderer, rotated_points[2][0], rotated_points[2][1],
+                      rotated_points[6][0], rotated_points[6][1]);
+    } else {
+        // Fat/chubby stick figure
+        // Bigger head (circle approximated with filled rect)
+        SDL_FRect head = {center_x - 5, center_y - 20, 10, 8};
+        SDL_RenderFillRect(renderer, &head);
+
+        // Fat body (wide oval approximated with filled rect)
+        SDL_FRect body = {center_x - 8, center_y - 12, 16, 20};
+        SDL_RenderFillRect(renderer, &body);
+
+        // Shorter arms extending from wider body
+        float arm_swing = is_walking ? SDL_sinf(walk_animation_timer) * 2.0f : 0.0f;
+        SDL_RenderLine(renderer, center_x - 8, center_y - 2 + arm_swing, center_x - 12, center_y + 2 + arm_swing);
+        SDL_RenderLine(renderer, center_x + 8, center_y - 2 - arm_swing, center_x + 12, center_y + 2 - arm_swing);
+
+        if (is_walking) {
+            // Walking legs - alternating positions (shorter stride for fat person)
+            float leg_swing = SDL_sinf(walk_animation_timer) * 2.0f; // Reduced swing
+            float leg_forward = SDL_sinf(walk_animation_timer + 3.14f) * 2.0f; // Opposite phase
+
+            // Left leg (shorter, from bottom of wide body)
+            SDL_RenderLine(renderer, center_x - 4, center_y + 8,
+                          center_x - 6 + leg_swing, center_y + 17);
+
+            // Right leg (shorter, from bottom of wide body)
+            SDL_RenderLine(renderer, center_x + 4, center_y + 8,
+                          center_x + 6 + leg_forward, center_y + 17);
+        } else {
+            // Static legs (shorter, from wider body)
+            SDL_RenderLine(renderer, center_x - 4, center_y + 8, center_x - 6, center_y + 17);
+            SDL_RenderLine(renderer, center_x + 4, center_y + 8, center_x + 6, center_y + 17);
+        }
     }
 }
 
