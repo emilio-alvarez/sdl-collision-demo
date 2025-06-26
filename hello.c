@@ -14,6 +14,7 @@
 #include <SDL3/SDL_main.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Game constants
 const int SCREEN_WIDTH = 1200;
@@ -42,9 +43,9 @@ static int current_level = 0;
 static int score = 0;
 static int lives = 3;
 
-// Timer system
-static float level_timer = 0.0f;
-static float level_time_limit = 60.0f; // Default 60 seconds
+// Timer system - Global timer for all levels
+static float global_timer = 0.0f;
+static float global_time_limit = 120.0f; // 2 minutes total for all levels
 
 // Frame rate control
 static Uint64 last_frame_time = 0;
@@ -106,7 +107,6 @@ typedef struct {
     int num_collectibles;
     MovingPlatform level_moving_platforms[5];
     int num_moving;
-    float time_limit; // Time limit for this level in seconds
 } Level;
 
 static Level levels[MAX_LEVELS];
@@ -142,6 +142,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     load_level(0);
     reset_player();
 
+    // Initialize global timer
+    global_timer = global_time_limit;
+
     // Initialize frame timing
     last_frame_time = SDL_GetTicksNS();
 
@@ -160,11 +163,13 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
             return SDL_APP_SUCCESS;
         case SDLK_R:
             if (game_over || game_won) {
-                // Restart current level
+                // Restart from beginning
                 game_over = 0;
                 game_won = 0;
                 lives = 3;
                 score = 0;
+                current_level = 0;
+                global_timer = global_time_limit; // Reset global timer
                 load_level(current_level);
                 reset_player();
             }
@@ -203,9 +208,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
     if (!game_over && !game_won) {
-        // Update timer
-        level_timer -= 1.0f / 60.0f; // Assuming 60 FPS
-        if (level_timer <= 0) {
+        // Update global timer
+        global_timer -= 1.0f / 60.0f; // Assuming 60 FPS
+        if (global_timer <= 0) {
             game_over = 1;
         }
 
@@ -776,14 +781,6 @@ void init_levels(void)
     levels[5].level_moving_platforms[2] = (MovingPlatform){{600, h-350, 50, 20}, 1, 0, 600, 700, 0, 0, 1};
     levels[5].level_moving_platforms[3] = (MovingPlatform){{400, h-600, 60, 20}, 2, 0, 400, 550, 0, 0, 1};
     levels[5].level_moving_platforms[4] = (MovingPlatform){{200, h-400, 50, 20}, 0, -2, 0, 0, h-600, h-350, 1};
-
-    // Set time limits for each level (in seconds)
-    levels[0].time_limit = 90.0f;  // Tutorial - generous time
-    levels[1].time_limit = 75.0f;  // Intermediate
-    levels[2].time_limit = 60.0f;  // Advanced
-    levels[3].time_limit = 90.0f;  // Vertical Challenge - needs more time for climbing
-    levels[4].time_limit = 45.0f;  // Speed Run - tight time limit!
-    levels[5].time_limit = 120.0f; // The Gauntlet - final challenge, more time needed
 }
 
 void load_level(int level_num)
@@ -807,10 +804,6 @@ void load_level(int level_num)
         moving_platforms[i] = level->level_moving_platforms[i];
     }
 
-    // Initialize timer
-    level_timer = level->time_limit;
-    level_time_limit = level->time_limit;
-
     // Give double jump power-up on level 1+
     has_double_jump = (level_num > 0);
 }
@@ -830,9 +823,6 @@ void reset_player(void)
     jump_held = 0;
     double_jump_used = 0;
     invincibility_timer = 0;
-
-    // Reset timer
-    level_timer = level->time_limit;
 }
 
 void update_collectibles(void)
@@ -946,21 +936,70 @@ void render_hud(void)
     SDL_snprintf(collectible_text, sizeof(collectible_text), "Gems: %d/%d", collected_count, total_collectibles);
     SDL_RenderDebugText(renderer, 10, 70, collectible_text);
 
-    // Timer
+        // Global Timer - Make it prominent in the top right
     char timer_text[32];
-    int minutes = (int)(level_timer / 60.0f);
-    int seconds = (int)(level_timer) % 60;
-    SDL_snprintf(timer_text, sizeof(timer_text), "Time: %02d:%02d", minutes, seconds);
+    int minutes = (int)(global_timer / 60.0f);
+    int seconds = (int)(global_timer) % 60;
+    SDL_snprintf(timer_text, sizeof(timer_text), "TIME: %02d:%02d", minutes, seconds);
 
-    // Change color based on remaining time
-    if (level_timer <= 10.0f) {
-        SDL_SetRenderDrawColor(renderer, 255, 100, 100, 255); // Red when low
-    } else if (level_timer <= 30.0f) {
-        SDL_SetRenderDrawColor(renderer, 255, 255, 100, 255); // Yellow when medium
+                // Position timer prominently at top right corner
+    int timer_x = w - 220;   // Right side with padding from edge
+    int timer_y = 20;        // Top of screen with padding
+
+    // Draw background box for timer - sized for 2x scaled text
+    SDL_FRect timer_bg = {timer_x, timer_y - 15, 200, 60};
+    if (global_timer <= 60.0f) {
+        SDL_SetRenderDrawColor(renderer, 180, 0, 0, 200); // Dark red background when critical (1 minute left)
+    } else if (global_timer <= 180.0f) {
+        SDL_SetRenderDrawColor(renderer, 180, 140, 0, 200); // Dark yellow background when low (3 minutes left)
     } else {
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White when plenty
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150); // Dark background when plenty
     }
-    SDL_RenderDebugText(renderer, 10, 90, timer_text);
+    SDL_RenderFillRect(renderer, &timer_bg);
+
+    // Draw thick border around timer
+    if (global_timer <= 60.0f) {
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Bright red border when critical
+    } else if (global_timer <= 180.0f) {
+        SDL_SetRenderDrawColor(renderer, 255, 200, 0, 255); // Bright yellow border when low
+    } else {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White border when plenty
+    }
+    // Draw multiple rectangles for thick border effect
+    SDL_RenderRect(renderer, &timer_bg);
+    SDL_FRect timer_border2 = {timer_bg.x - 1, timer_bg.y - 1, timer_bg.w + 2, timer_bg.h + 2};
+    SDL_RenderRect(renderer, &timer_border2);
+    SDL_FRect timer_border3 = {timer_bg.x - 2, timer_bg.y - 2, timer_bg.w + 4, timer_bg.h + 4};
+    SDL_RenderRect(renderer, &timer_border3);
+
+    // Change text color based on remaining time
+    if (global_timer <= 60.0f) {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White text on red background
+    } else if (global_timer <= 180.0f) {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White text on yellow background
+    } else {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White text
+    }
+
+        // Get current render scale and set larger scale for timer text
+    float scale_x, scale_y;
+    SDL_GetRenderScale(renderer, &scale_x, &scale_y);
+    SDL_SetRenderScale(renderer, scale_x * 2.0f, scale_y * 2.0f); // Double the scale
+
+    // Calculate centered position for text inside the box
+    // Estimate text dimensions: SDL debug text is roughly 8x12 pixels per character
+    int text_width = (int)(strlen(timer_text) * 8 * 2); // 8 pixels per char, doubled for scale
+    int text_height = 12 * 2; // 12 pixels height, doubled for scale
+
+    // Center the text in the background box
+    int centered_x = (timer_bg.x + timer_bg.w/2 - text_width/2) / 2; // Divide by 2 for scaled coordinates
+    int centered_y = (timer_bg.y + timer_bg.h/2 - text_height/2) / 2; // Divide by 2 for scaled coordinates
+
+    // Render the timer text at centered position
+    SDL_RenderDebugText(renderer, centered_x, centered_y, timer_text);
+
+    // Reset render scale back to original
+    SDL_SetRenderScale(renderer, scale_x, scale_y);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Reset color
 
     // Power-ups
@@ -973,7 +1012,7 @@ void render_hud(void)
         SDL_SetRenderDrawColor(renderer, 255, 100, 100, 255);
         SDL_RenderDebugText(renderer, w/2 - 100, h/2 - 50, "GAME OVER");
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        if (level_timer <= 0) {
+        if (global_timer <= 0) {
             SDL_RenderDebugText(renderer, w/2 - 60, h/2 - 30, "TIME'S UP!");
         }
         SDL_RenderDebugText(renderer, w/2 - 80, h/2 - 20, "Press R to restart");
@@ -990,14 +1029,14 @@ void render_hud(void)
             SDL_RenderDebugText(renderer, w/2 - 80, h/2 - 20, "Press R to restart");
         }
     } else {
-        // Controls
-        SDL_RenderDebugText(renderer, w - 300, 10, "Controls:");
-        SDL_RenderDebugText(renderer, w - 300, 30, "Arrow Keys / WASD: Move");
-        SDL_RenderDebugText(renderer, w - 300, 50, "Space / Up: Jump");
+        // Controls - moved down to avoid timer overlap
+        SDL_RenderDebugText(renderer, w - 300, 100, "Controls:");
+        SDL_RenderDebugText(renderer, w - 300, 120, "Arrow Keys / WASD: Move");
+        SDL_RenderDebugText(renderer, w - 300, 140, "Space / Up: Jump");
         if (has_double_jump) {
-            SDL_RenderDebugText(renderer, w - 300, 70, "Double Jump Available!");
+            SDL_RenderDebugText(renderer, w - 300, 160, "Double Jump Available!");
         }
-        SDL_RenderDebugText(renderer, w - 300, 90, "Collect all gems to win!");
+        SDL_RenderDebugText(renderer, w - 300, 180, "Collect all gems to win!");
     }
 }
 
