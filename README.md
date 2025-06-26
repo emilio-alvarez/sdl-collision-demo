@@ -14,4 +14,4 @@ cmake --build build
 
 ## Demo
 
-[![Watch the demo](https://raw.githubusercontent.com/emilio-alvarez/sdl-collision-demo/main/demo.png)](https://raw.githubusercontent.com/emilio-alvarez/sdl-collision-demo/main/demo.mov)
+https://github.com/user-attachments/assets/4c0498f3-6f9d-45c4-9a9a-c41429f53974
