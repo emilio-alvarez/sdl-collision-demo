@@ -42,6 +42,10 @@ static int current_level = 0;
 static int score = 0;
 static int lives = 3;
 
+// Timer system
+static float level_timer = 0.0f;
+static float level_time_limit = 60.0f; // Default 60 seconds
+
 // Frame rate control
 static Uint64 last_frame_time = 0;
 static const Uint64 TARGET_FRAME_TIME = 16666667; // 60 FPS in nanoseconds
@@ -102,6 +106,7 @@ typedef struct {
     int num_collectibles;
     MovingPlatform level_moving_platforms[5];
     int num_moving;
+    float time_limit; // Time limit for this level in seconds
 } Level;
 
 static Level levels[MAX_LEVELS];
@@ -198,6 +203,12 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
     if (!game_over && !game_won) {
+        // Update timer
+        level_timer -= 1.0f / 60.0f; // Assuming 60 FPS
+        if (level_timer <= 0) {
+            game_over = 1;
+        }
+
         // Handle input
         const Uint8 *keystate = SDL_GetKeyboardState(NULL);
         float old_x = player.x;
@@ -560,8 +571,8 @@ void init_levels(void)
     levels[0].platforms[5] = (SDL_FRect){900, h-400, 100, 30};
 
     levels[0].num_lava = 2;
-    levels[0].lava_squares[0] = (SDL_FRect){300, h-50, 100, 50};
-    levels[0].lava_squares[1] = (SDL_FRect){600, h-50, 100, 50};
+    levels[0].lava_squares[0] = (SDL_FRect){300, h-45, 100, 50};
+    levels[0].lava_squares[1] = (SDL_FRect){600, h-45, 100, 50};
 
     levels[0].start_pos = (SDL_FRect){50, h-150, 50, 50};
     levels[0].goal = (SDL_FRect){w-100, h-300, 50, 50};
@@ -586,9 +597,9 @@ void init_levels(void)
     levels[1].platforms[7] = (SDL_FRect){w-200, h-100, 200, 50};
 
     levels[1].num_lava = 3;
-    levels[1].lava_squares[0] = (SDL_FRect){200, h-50, 100, 50};
-    levels[1].lava_squares[1] = (SDL_FRect){450, h-50, 300, 50};
-    levels[1].lava_squares[2] = (SDL_FRect){900, h-50, 100, 50};
+    levels[1].lava_squares[0] = (SDL_FRect){200, h-45, 100, 45};
+    levels[1].lava_squares[1] = (SDL_FRect){450, h-45, 300, 45};
+    levels[1].lava_squares[2] = (SDL_FRect){900, h-45, 100, 45};
 
     levels[1].start_pos = (SDL_FRect){50, h-150, 50, 50};
     levels[1].goal = (SDL_FRect){w-150, h-200, 50, 50};
@@ -617,10 +628,10 @@ void init_levels(void)
     levels[2].platforms[9] = (SDL_FRect){w-150, h-100, 150, 50};
 
     levels[2].num_lava = 4;
-    levels[2].lava_squares[0] = (SDL_FRect){150, h-50, 100, 50};
-    levels[2].lava_squares[1] = (SDL_FRect){350, h-50, 100, 50};
-    levels[2].lava_squares[2] = (SDL_FRect){700, h-50, 250, 50};
-    levels[2].lava_squares[3] = (SDL_FRect){550, h-250, 50, 70};
+    levels[2].lava_squares[0] = (SDL_FRect){150, h-45, 100, 45};
+    levels[2].lava_squares[1] = (SDL_FRect){350, h-45, 100, 45};
+    levels[2].lava_squares[2] = (SDL_FRect){700, h-45, 250, 45};
+    levels[2].lava_squares[3] = (SDL_FRect){550, h-245, 50, 70};
 
     levels[2].start_pos = (SDL_FRect){50, h-150, 50, 50};
     levels[2].goal = (SDL_FRect){w-100, h-200, 50, 50};
@@ -653,11 +664,11 @@ void init_levels(void)
     levels[3].platforms[11] = (SDL_FRect){w-150, h-200, 150, 50};
 
     levels[3].num_lava = 5;
-    levels[3].lava_squares[0] = (SDL_FRect){100, h-50, 100, 50};
-    levels[3].lava_squares[1] = (SDL_FRect){300, h-50, 200, 50};
-    levels[3].lava_squares[2] = (SDL_FRect){600, h-50, 300, 50};
-    levels[3].lava_squares[3] = (SDL_FRect){450, h-350, 50, 100};
-    levels[3].lava_squares[4] = (SDL_FRect){750, h-450, 50, 150};
+    levels[3].lava_squares[0] = (SDL_FRect){100, h-45, 100, 45};
+    levels[3].lava_squares[1] = (SDL_FRect){300, h-45, 200, 45};
+    levels[3].lava_squares[2] = (SDL_FRect){600, h-45, 300, 45};
+    levels[3].lava_squares[3] = (SDL_FRect){450, h-345, 50, 95};
+    levels[3].lava_squares[4] = (SDL_FRect){750, h-445, 50, 145};
 
     levels[3].start_pos = (SDL_FRect){25, h-150, 40, 40};
     levels[3].goal = (SDL_FRect){w-100, h-300, 50, 50};
@@ -693,10 +704,10 @@ void init_levels(void)
     levels[4].platforms[14] = (SDL_FRect){w-200, h-100, 200, 50};
 
     levels[4].num_lava = 4;
-    levels[4].lava_squares[0] = (SDL_FRect){150, h-50, 100, 50};
-    levels[4].lava_squares[1] = (SDL_FRect){310, h-50, 240, 50};
-    levels[4].lava_squares[2] = (SDL_FRect){610, h-50, 240, 50};
-    levels[4].lava_squares[3] = (SDL_FRect){380, h-350, 120, 100};
+    levels[4].lava_squares[0] = (SDL_FRect){150, h-45, 100, 50};
+    levels[4].lava_squares[1] = (SDL_FRect){310, h-45, 240, 50};
+    levels[4].lava_squares[2] = (SDL_FRect){610, h-45, 240, 50};
+    levels[4].lava_squares[3] = (SDL_FRect){380, h-345, 120, 100};
 
     levels[4].start_pos = (SDL_FRect){50, h-150, 40, 40};
     levels[4].goal = (SDL_FRect){w-150, h-200, 50, 50};
@@ -740,11 +751,11 @@ void init_levels(void)
     levels[5].platforms[19] = (SDL_FRect){w-150, h-150, 150, 50};
 
     levels[5].num_lava = 5;
-    levels[5].lava_squares[0] = (SDL_FRect){120, h-50, 60, 50};
-    levels[5].lava_squares[1] = (SDL_FRect){240, h-50, 160, 50};
-    levels[5].lava_squares[2] = (SDL_FRect){440, h-50, 180, 50};
-    levels[5].lava_squares[3] = (SDL_FRect){660, h-50, 280, 50};
-    levels[5].lava_squares[4] = (SDL_FRect){780, h-400, 60, 150};
+    levels[5].lava_squares[0] = (SDL_FRect){120, h-45, 60, 50};
+    levels[5].lava_squares[1] = (SDL_FRect){240, h-45, 160, 50};
+    levels[5].lava_squares[2] = (SDL_FRect){440, h-45, 180, 50};
+    levels[5].lava_squares[3] = (SDL_FRect){660, h-45, 280, 50};
+    levels[5].lava_squares[4] = (SDL_FRect){780, h-395, 60, 150};
 
     levels[5].start_pos = (SDL_FRect){25, h-150, 40, 40};
     levels[5].goal = (SDL_FRect){w-100, h-250, 50, 50};
@@ -765,6 +776,14 @@ void init_levels(void)
     levels[5].level_moving_platforms[2] = (MovingPlatform){{600, h-350, 50, 20}, 1, 0, 600, 700, 0, 0, 1};
     levels[5].level_moving_platforms[3] = (MovingPlatform){{400, h-600, 60, 20}, 2, 0, 400, 550, 0, 0, 1};
     levels[5].level_moving_platforms[4] = (MovingPlatform){{200, h-400, 50, 20}, 0, -2, 0, 0, h-600, h-350, 1};
+
+    // Set time limits for each level (in seconds)
+    levels[0].time_limit = 90.0f;  // Tutorial - generous time
+    levels[1].time_limit = 75.0f;  // Intermediate
+    levels[2].time_limit = 60.0f;  // Advanced
+    levels[3].time_limit = 90.0f;  // Vertical Challenge - needs more time for climbing
+    levels[4].time_limit = 45.0f;  // Speed Run - tight time limit!
+    levels[5].time_limit = 120.0f; // The Gauntlet - final challenge, more time needed
 }
 
 void load_level(int level_num)
@@ -788,6 +807,10 @@ void load_level(int level_num)
         moving_platforms[i] = level->level_moving_platforms[i];
     }
 
+    // Initialize timer
+    level_timer = level->time_limit;
+    level_time_limit = level->time_limit;
+
     // Give double jump power-up on level 1+
     has_double_jump = (level_num > 0);
 }
@@ -807,6 +830,9 @@ void reset_player(void)
     jump_held = 0;
     double_jump_used = 0;
     invincibility_timer = 0;
+
+    // Reset timer
+    level_timer = level->time_limit;
 }
 
 void update_collectibles(void)
@@ -920,9 +946,26 @@ void render_hud(void)
     SDL_snprintf(collectible_text, sizeof(collectible_text), "Gems: %d/%d", collected_count, total_collectibles);
     SDL_RenderDebugText(renderer, 10, 70, collectible_text);
 
+    // Timer
+    char timer_text[32];
+    int minutes = (int)(level_timer / 60.0f);
+    int seconds = (int)(level_timer) % 60;
+    SDL_snprintf(timer_text, sizeof(timer_text), "Time: %02d:%02d", minutes, seconds);
+
+    // Change color based on remaining time
+    if (level_timer <= 10.0f) {
+        SDL_SetRenderDrawColor(renderer, 255, 100, 100, 255); // Red when low
+    } else if (level_timer <= 30.0f) {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 100, 255); // Yellow when medium
+    } else {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White when plenty
+    }
+    SDL_RenderDebugText(renderer, 10, 90, timer_text);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Reset color
+
     // Power-ups
     if (has_double_jump) {
-        SDL_RenderDebugText(renderer, 10, 90, "Double Jump: ON");
+        SDL_RenderDebugText(renderer, 10, 110, "Double Jump: ON");
     }
 
     // Instructions
@@ -930,6 +973,9 @@ void render_hud(void)
         SDL_SetRenderDrawColor(renderer, 255, 100, 100, 255);
         SDL_RenderDebugText(renderer, w/2 - 100, h/2 - 50, "GAME OVER");
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        if (level_timer <= 0) {
+            SDL_RenderDebugText(renderer, w/2 - 60, h/2 - 30, "TIME'S UP!");
+        }
         SDL_RenderDebugText(renderer, w/2 - 80, h/2 - 20, "Press R to restart");
     } else if (game_won) {
         SDL_SetRenderDrawColor(renderer, 100, 255, 100, 255);
