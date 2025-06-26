@@ -1,4 +1,6 @@
 # sdl-collision-demo
 
+This code was generated using Cursor, with minimal tweaks made manually.
+
 A simple game made with SDL. This is an exercise in learning how to instruct Cursor to make
 something.
