@@ -14,4 +14,4 @@ cmake --build build
 
 ## Demo
 
-<video src='demo.mov' width=180/>
+[![Watch the demo](https://raw.githubusercontent.com/emilio-alvarez/sdl-collision-demo/main/demo.png)](https://raw.githubusercontent.com/emilio-alvarez/sdl-collision-demo/main/demo.mov)
