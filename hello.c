@@ -24,9 +24,9 @@ const int MAX_LEVELS = 3;
 
 // Physics constants
 const float GRAVITY = 0.2f;
-const float JUMP_STRENGTH = -10.0f;
-const float MOVE_SPEED = 0.5f;
-const float MAX_FALL_SPEED = 0.5f;
+const float JUMP_STRENGTH = -8.0f;
+const float MOVE_SPEED = 5.0f;
+const float MAX_FALL_SPEED = 18.0f;
 const float SPIN_SPEED = 8.0f;
 
 const int COYOTE_TIME = 6; // frames
@@ -41,6 +41,10 @@ static int game_won = 0;
 static int current_level = 0;
 static int score = 0;
 static int lives = 3;
+
+// Frame rate control
+static Uint64 last_frame_time = 0;
+static const Uint64 TARGET_FRAME_TIME = 16666667; // 60 FPS in nanoseconds
 
 // Player state
 static SDL_FRect player;
@@ -132,6 +136,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     init_levels();
     load_level(0);
     reset_player();
+
+    // Initialize frame timing
+    last_frame_time = SDL_GetTicksNS();
 
     return SDL_APP_CONTINUE;
 }
@@ -465,6 +472,18 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     render_hud();
 
     SDL_RenderPresent(renderer);
+
+    // Frame rate limiting
+    Uint64 current_time = SDL_GetTicksNS();
+    Uint64 frame_time = current_time - last_frame_time;
+
+    if (frame_time < TARGET_FRAME_TIME) {
+        Uint64 delay_ns = TARGET_FRAME_TIME - frame_time;
+        SDL_DelayNS(delay_ns);
+    }
+
+    last_frame_time = SDL_GetTicksNS();
+
     return SDL_APP_CONTINUE;
 }
 
