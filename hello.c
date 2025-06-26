@@ -23,10 +23,10 @@ const int MAX_COLLECTIBLES = 10;
 const int MAX_LEVELS = 3;
 
 // Physics constants
-const float GRAVITY = 0.3f;
-const float JUMP_STRENGTH = -12.0f;
-const float MOVE_SPEED = 2.0f;
-const float MAX_FALL_SPEED = 5.0f;
+const float GRAVITY = 0.2f;
+const float JUMP_STRENGTH = -10.0f;
+const float MOVE_SPEED = 0.5f;
+const float MAX_FALL_SPEED = 0.5f;
 const float SPIN_SPEED = 8.0f;
 
 const int COYOTE_TIME = 6; // frames
@@ -545,7 +545,7 @@ void init_levels(void)
     levels[0].lava_squares[1] = (SDL_FRect){600, h-50, 100, 50};
 
     levels[0].start_pos = (SDL_FRect){50, h-150, 50, 50};
-    levels[0].goal = (SDL_FRect){w-100, h-150, 50, 50};
+    levels[0].goal = (SDL_FRect){w-100, h-300, 50, 50};
 
     levels[0].num_collectibles = 3;
     levels[0].level_collectibles[0] = (Collectible){{450, h-200, 20, 20}, 0, 0};
