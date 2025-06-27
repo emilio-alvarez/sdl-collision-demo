@@ -10,6 +10,7 @@ something.
 ```
 git clone --recurse-submodules git@github.com:emilio-alvarez/sdl-collision-demo.git
 cd sdl-collision-demo
+cmake -S . -B build
 cmake --build build
 ./build/hello
 ```
