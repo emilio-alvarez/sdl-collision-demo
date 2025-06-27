@@ -19,9 +19,9 @@
 // Game constants
 const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 800;
-const int MAX_PARTICLES = 100;
-const int MAX_COLLECTIBLES = 10;
-const int MAX_LEVELS = 6;
+#define MAX_PARTICLES 100
+#define MAX_COLLECTIBLES 10
+#define MAX_LEVELS 6
 
 // Physics constants
 const float GRAVITY = 0.2f;
